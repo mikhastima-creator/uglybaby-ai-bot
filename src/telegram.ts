@@ -6,11 +6,11 @@ export async function sendTelegramMessage(
   token: string
 ): Promise<void> {
   const response = await fetch(
-    `${TELEGRAM_API}/bot${encodeURIComponent(token)}/sendMessage`,
+    `${TELEGRAM_API}/bot${token}/sendMessage`,
     {
       method: "POST",
       headers: {
-        "content-type": "application/json"
+        "content-type": "application/json",
       },
       body: JSON.stringify({
         chat_id: chatId,
@@ -20,16 +20,19 @@ export async function sendTelegramMessage(
             [
               {
                 text: "📊 Анализировать TikTok",
-                callback_data: "analyze_tiktok"
-              }
-            ]
-          ]
-        }
-      })
+                callback_data: "analyze_tiktok",
+              },
+            ],
+          ],
+        },
+      }),
     }
   );
 
   if (!response.ok) {
-    throw new Error(`Telegram API returned HTTP ${response.status}`);
+    const errorText = await response.text();
+    throw new Error(
+      `Telegram API returned HTTP ${response.status}: ${errorText}`
+    );
   }
 }
