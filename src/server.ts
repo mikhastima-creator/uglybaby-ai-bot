@@ -1,4 +1,8 @@
-import express, { type NextFunction, type Request, type Response } from "express";
+import express, {
+  type NextFunction,
+  type Request,
+  type Response,
+} from "express";
 import { sendTelegramMessage } from "./telegram.js";
 
 const app = express();
@@ -34,21 +38,55 @@ app.post(
           token
         );
       }
-    } catch {
-      console.error("Telegram webhook processing error");
+    } catch (error) {
+      console.error("Telegram webhook processing error:", error);
     }
   }
 );
 
 app.use(
-  (error: unknown, _req: Request, res: Response, next: NextFunction) => {
+  (
+    error: unknown,
+    _req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     if (error instanceof SyntaxError) {
       return res.sendStatus(200);
     }
+
     next(error);
   }
 );
 
-app.listen(port, "0.0.0.0", () => {
+app.listen(port, "0.0.0.0", async () => {
   console.log(`UGLYBABY AI server listening on port ${port}`);
+
+  if (!token) {
+    console.error("TELEGRAM_BOT_TOKEN is missing");
+    return;
+  }
+
+  const publicUrl = process.env.PUBLIC_URL;
+
+  if (!publicUrl) {
+    console.error("PUBLIC_URL is missing");
+    return;
+  }
+
+  try {
+    const webhookUrl = `${publicUrl}/api/telegram/webhook`;
+
+    const response = await fetch(
+      `https://api.telegram.org/bot${token}/setWebhook?url=${encodeURIComponent(
+        webhookUrl
+      )}`
+    );
+
+    const result = await response.json();
+
+    console.log("Telegram webhook setup:", result);
+  } catch (error) {
+    console.error("Telegram webhook setup error:", error);
+  }
 });
