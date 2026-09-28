@@ -1,38 +1,31 @@
-const TELEGRAM_API = "https://api.telegram.org";
-
 export async function sendTelegramMessage(
   chatId: number | string,
   text: string,
-  token: string
-): Promise<void> {
+  token: string,
+  replyMarkup?: unknown
+) {
   const response = await fetch(
-    `${TELEGRAM_API}/bot${token}/sendMessage`,
+    `https://api.telegram.org/bot${token}/sendMessage`,
     {
       method: "POST",
       headers: {
-        "content-type": "application/json",
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         chat_id: chatId,
         text,
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: "📊 Анализировать TikTok",
-                callback_data: "analyze_tiktok",
-              },
-            ],
-          ],
-        },
+        reply_markup: replyMarkup,
       }),
     }
   );
 
-  if (!response.ok) {
-    const errorText = await response.text();
+  const data = await response.json();
+
+  if (!response.ok || !data.ok) {
     throw new Error(
-      `Telegram API returned HTTP ${response.status}: ${errorText}`
+      `Telegram API error: ${JSON.stringify(data)}`
     );
   }
+
+  return data;
 }
